@@ -45,13 +45,18 @@ fun Route.users() {
         }
         route("login") {
             post {
-                val user = call.receive<ExposedUsers>()
-                val wasFound = userService.login(user)
-                if (wasFound) {
-                    val foundUser: ExposedUserInfo = userService.getUser(user)!!
-                    call.respond(HttpStatusCode.Found, foundUser)
-                } else {
-                    call.respond(HttpStatusCode.NotFound, "User wasn't found")
+                try {
+                    val user = call.receive<ExposedUsers>()
+                    val wasFound = userService.login(user)
+                    if (wasFound) {
+                        val foundUser: ExposedUserInfo = userService.getUser(user)!!
+                        call.respond(HttpStatusCode.Found, foundUser)
+                    } else {
+                        call.respond(HttpStatusCode.NotFound, "User wasn't found")
+                    }
+                } catch (ex: Exception) {
+                    println(ex.message)
+                    call.respond(HttpStatusCode.InternalServerError)
                 }
             }
         }

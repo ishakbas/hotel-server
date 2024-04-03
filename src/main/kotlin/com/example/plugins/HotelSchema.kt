@@ -87,10 +87,10 @@ class HotelService {
 
         suspend fun create(booking: ExposedBookings): Int = dbQuery {
             Bookings.insert {
-                it[user_id] = booking.user_id
-                it[room_id] = booking.room_id
-                it[check_in_date] = booking.check_in_date
-                it[check_out_date] = booking.check_out_date
+                it[user_id] = booking.userId
+                it[room_id] = booking.roomId
+                it[check_in_date] = booking.checkInDate
+                it[check_out_date] = booking.checkOutDate
                 it[status] = booking.status
             }[Bookings.id].value
         }
@@ -98,10 +98,10 @@ class HotelService {
         suspend fun update(id: Int, bookings: ExposedBookings) {
             dbQuery {
                 Bookings.update({ Bookings.id eq id }) {
-                    it[user_id] = bookings.user_id
-                    it[room_id] = bookings.room_id
-                    it[check_in_date] = bookings.check_in_date
-                    it[check_out_date] = bookings.check_out_date
+                    it[user_id] = bookings.userId
+                    it[room_id] = bookings.roomId
+                    it[check_in_date] = bookings.checkInDate
+                    it[check_out_date] = bookings.checkOutDate
                     it[status] = bookings.status
                 }
             }
@@ -139,7 +139,7 @@ class HotelService {
             HotelRooms.insert {
                 it[name] = hotelRooms.name
                 it[room_type_id] = hotelRooms.roomTypeId
-                it[room_image] = hotelRooms.room_image
+                it[room_image] = hotelRooms.roomImage
             }
         }
 
@@ -148,7 +148,7 @@ class HotelService {
                 HotelRooms.update({ HotelRooms.id eq id }) {
                     it[name] = hotelRooms.name
                     it[room_type_id] = hotelRooms.roomTypeId
-                    it[room_image] = hotelRooms.room_image
+                    it[room_image] = hotelRooms.roomImage
                 }
             }
         }
