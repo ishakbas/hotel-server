@@ -2,6 +2,7 @@ package com.example.plugins
 
 import com.example.data.*
 import kotlinx.coroutines.Dispatchers
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.*
@@ -15,11 +16,11 @@ class HotelService {
     class UserRepository {
 
         suspend fun login(user: ExposedUsers): Boolean = dbQuery {
-            Users.select { Users.login eq user.login and (Users.password eq user.password) }.count() > 0
+            Users.selectAll().where { Users.login eq user.login and (Users.password eq user.password) }.count() > 0
         }
 
         suspend fun getUser(user: ExposedUsers): ExposedUserInfo? = dbQuery {
-            Users.select { Users.login.eq(user.login) and Users.password.eq(user.password) }.map {
+            Users.selectAll().where { Users.login.eq(user.login) and Users.password.eq(user.password) }.map {
                 it[Users.admin]?.let { it1 ->
                     ExposedUserInfo(
                         it[Users.id].value,
@@ -33,7 +34,7 @@ class HotelService {
 
         suspend fun read(id: Int): ExposedUsers? {
             return dbQuery {
-                Users.select { Users.id eq id }.map {
+                Users.selectAll().where { Users.id eq id }.map {
                     it[Users.admin]?.let { it1 ->
                         ExposedUsers(
                             it[Users.login],
@@ -73,7 +74,7 @@ class HotelService {
     class BookingsRepository {
         suspend fun read(id: Int): ExposedBookings? {
             return dbQuery {
-                Bookings.select { Bookings.id eq id }.map {
+                Bookings.selectAll().where { Bookings.id eq id }.map {
                     ExposedBookings(
                         it[Bookings.user_id],
                         it[Bookings.room_id],
@@ -115,11 +116,19 @@ class HotelService {
     }
 
     class HotelRoomsRepository {
-        suspend fun read(id: Int): ExposedHotelRoomsWithTypes? {
+        suspend fun read(id: Int): ExposedHotelRoomsWithTypesExtended? {
             return dbQuery {
-                HotelRooms.innerJoin(RoomTypes).select { HotelRooms.id eq id }.map {
-                    ExposedHotelRoomsWithTypes(
-                        it[HotelRooms.id].value, it[HotelRooms.name], it[RoomTypes.name], it[HotelRooms.room_image]
+                HotelRooms.innerJoin(RoomTypes).selectAll().where { HotelRooms.id eq id }.map {
+                    ExposedHotelRoomsWithTypesExtended(
+                        it[HotelRooms.id].value,
+                        it[HotelRooms.name],
+                        it[HotelRooms.room_image],
+                        it[RoomTypes.name],
+                        it[RoomTypes.description],
+                        it[RoomTypes.bed_count],
+                        it[RoomTypes.wifi],
+                        it[RoomTypes.kitchen],
+                        it[RoomTypes.tv]
                     )
                 }.singleOrNull()
             }
@@ -129,10 +138,14 @@ class HotelService {
             return dbQuery {
                 (HotelRooms innerJoin RoomTypes).selectAll().map {
                     ExposedHotelRoomsWithTypes(
-                        it[HotelRooms.id].value, it[HotelRooms.name], it[RoomTypes.name], it[HotelRooms.room_image]
+                        it[HotelRooms.id].value,
+                        it[HotelRooms.name],
+                        it[RoomTypes.name],
+                        it[HotelRooms.room_image]
                     )
                 }
             }
+
         }
 
         suspend fun create(hotelRooms: ExposedHotelRooms) = dbQuery {
@@ -170,8 +183,17 @@ class HotelService {
 
         suspend fun read(id: Int): ExposedRoomTypes? {
             return dbQuery {
-                RoomTypes.select { RoomTypes.id eq id }
-                    .map { ExposedRoomTypes(it[RoomTypes.name], it[RoomTypes.description]) }.singleOrNull()
+                RoomTypes.selectAll().where { RoomTypes.id eq id }
+                    .map {
+                        ExposedRoomTypes(
+                            it[RoomTypes.name],
+                            it[RoomTypes.description],
+                            it[RoomTypes.bed_count],
+                            it[RoomTypes.kitchen],
+                            it[RoomTypes.wifi],
+                            it[RoomTypes.tv]
+                        )
+                    }.singleOrNull()
             }
         }
 
@@ -199,5 +221,69 @@ data class ExposedHotelRoomsWithTypes(
     val id: Int,
     val name: String,
     val roomType: String,
-    val room_image: ByteArray?
-)
+    @SerialName("room_image")
+    val roomImage: ByteArray?
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as ExposedHotelRoomsWithTypes
+
+        if (id != other.id) return false
+        if (name != other.name) return false
+        if (roomType != other.roomType) return false
+        if (roomImage != null) {
+            if (other.roomImage == null) return false
+            if (!roomImage.contentEquals(other.roomImage)) return false
+        } else if (other.roomImage != null) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = id
+        result = 31 * result + name.hashCode()
+        result = 31 * result + roomType.hashCode()
+        result = 31 * result + (roomImage?.contentHashCode() ?: 0)
+        return result
+    }
+}
+
+@Serializable
+data class ExposedHotelRoomsWithTypesExtended(
+    val id: Int,
+    val name: String,
+    @SerialName("room_image")
+    val roomImage: ByteArray?,
+    val roomTypeName: String,
+    val description: String?,
+    @SerialName("bed_count")
+    val bedCount: Int?,
+    val wifi: Boolean?,
+    val kitchen: Boolean?,
+    val tv: Boolean?
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as ExposedHotelRoomsWithTypesExtended
+
+        if (id != other.id) return false
+        if (name != other.name) return false
+        if (roomImage != null) {
+            if (other.roomImage == null) return false
+            if (!roomImage.contentEquals(other.roomImage)) return false
+        } else if (other.roomImage != null) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = id
+        result = 31 * result + name.hashCode()
+        result = 31 * result + (roomImage?.contentHashCode() ?: 0)
+        return result
+    }
+}

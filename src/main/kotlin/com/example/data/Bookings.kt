@@ -16,7 +16,7 @@ data class ExposedBookings(
     val checkInDate: LocalDate,
     @SerialName("check_out_date")
     val checkOutDate: LocalDate,
-    val status: String?
+    val status: String? = null
 )
 
 object Bookings : IntIdTable("bookings") {

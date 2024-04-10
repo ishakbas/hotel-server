@@ -40,3 +40,4 @@ object HotelRooms : IntIdTable("hotel_rooms") {
     val room_type_id = integer("room_type_id").references(RoomTypes.id)
     val room_image = binary("room_image").nullable()
 }
+

@@ -171,8 +171,8 @@ fun Routing.bookings() {
             }
         }
         post {
-            val booking = call.receive<ExposedBookings>()
             try {
+                val booking = call.receive<ExposedBookings>()
                 val id = bookingService.create(booking)
                 call.respond(HttpStatusCode.Created, id)
             } catch (ex: Exception) {
