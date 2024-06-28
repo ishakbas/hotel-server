@@ -9,7 +9,9 @@ data class ExposedHotelRooms(
     val name: String,
     val roomTypeId: Int,
     @SerialName("room_image")
-    val roomImage: ByteArray?
+    val roomImage: ByteArray?,
+    @SerialName("room_price")
+    val roomPrice: Int
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -39,5 +41,6 @@ object HotelRooms : IntIdTable("hotel_rooms") {
     val name = varchar("name", 50)
     val room_type_id = integer("room_type_id").references(RoomTypes.id)
     val room_image = binary("room_image").nullable()
+    val room_price = integer("room_price")
 }
 

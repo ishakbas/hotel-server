@@ -124,6 +124,7 @@ class HotelService {
                         it[HotelRooms.name],
                         it[HotelRooms.room_image],
                         it[RoomTypes.name],
+                        it[HotelRooms.room_price],
                         it[RoomTypes.description],
                         it[RoomTypes.bed_count],
                         it[RoomTypes.wifi],
@@ -257,6 +258,8 @@ data class ExposedHotelRoomsWithTypesExtended(
     @SerialName("room_image")
     val roomImage: ByteArray?,
     val roomTypeName: String,
+    @SerialName("room_price")
+    val roomPrice: Int,
     val description: String?,
     @SerialName("bed_count")
     val bedCount: Int?,
